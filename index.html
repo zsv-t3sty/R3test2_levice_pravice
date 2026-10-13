@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+
+<html lang="cs">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<meta name="theme-color" content="#14151c"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<title>Kvíz · Levice a Pravice</title>
+<style>
+:root{
+  --ink:#14151c; --card:rgba(27,29,39,.94); --border:rgba(255,255,255,.08);
+  --muted:#98a0b3; --text:#edeff6;
+  --primary:#4c5fd6; --primary-deep:#38439e; --primary-light:#8b96ea;
+  --green:#2fa571; --red:#e5695f; --redSoft:#e5695f;
+  --lib:#3f7fd1; --con:#c78a35; --soc:#c94f45; --amber:#d9a441;
+  --surface:rgba(255,255,255,.03); --sans:'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{
+  -webkit-text-size-adjust:100%; touch-action:manipulation;
+  font-family:var(--sans); color:var(--text); font-size:16px;
+  user-select:none; -webkit-user-select:none; -ms-user-select:none;
+}
+input,textarea{user-select:text; -webkit-user-select:text; -ms-user-select:text;}
+body{
+  font-family:var(--sans); color:var(--text);
+  min-height:100vh; min-height:100dvh;
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+  padding-top:max(20px, env(safe-area-inset-top));
+  padding-bottom:max(20px, env(safe-area-inset-bottom));
+  padding-left:max(20px, env(safe-area-inset-left));
+  padding-right:max(20px, env(safe-area-inset-right));
+  background:#101119;
+  background-image:
+    radial-gradient(640px 480px at 10% 10%, rgba(201,79,69,.13), transparent 62%),
+    radial-gradient(720px 520px at 94% 16%, rgba(63,127,209,.12), transparent 62%),
+    radial-gradient(620px 480px at 50% 110%, rgba(76,95,214,.12), transparent 62%);
+  overscroll-behavior-y:contain;
+}
+button{touch-action:manipulation; font-family:inherit;}
+:focus-visible{outline:2px solid var(--primary-light); outline-offset:2px;}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important;}
+}
+
+/* ── LAYOUT ── */
+#app{
+  width:100%; max-width:640px;
+  position:relative; z-index:1;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+  overflow:hidden;
+}
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* ── START ── */
+#start-screen{position:relative; overflow:hidden; text-align:center; padding:52px 32px 44px;}
+#start-screen.active{display:block;}
+.start-content{position:relative; z-index:1; display:flex; flex-direction:column; gap:16px; align-items:stretch;}
+
+.ambient-orbs{display:none; position:fixed; z-index:0; inset:0; overflow:hidden; pointer-events:none;}
+body:has(#start-screen.active) .ambient-orbs{display:block;}
+body:has(#start-screen.active) #app{background:rgba(20,21,28,.7);}
+.ambient-orbs span{position:absolute; width:min(88vw,900px); aspect-ratio:1; border-radius:50%; filter:blur(82px); opacity:.46; will-change:transform;}
+.ambient-orbs .ambient-orb-a{top:-18vh; right:-28vw; background:radial-gradient(circle,#5266dc 0%,rgba(76,95,214,.34) 48%,transparent 72%); animation:ambient-drift-a 13s ease-in-out infinite alternate;}
+.ambient-orbs .ambient-orb-b{bottom:-20vh; left:-25vw; background:radial-gradient(circle,#a84c59 0%,rgba(169,76,89,.32) 48%,transparent 72%); animation:ambient-drift-b 15s ease-in-out infinite alternate;}
+@keyframes ambient-drift-a{from{transform:translate3d(-14vw,-8vh,0) scale(.84);}to{transform:translate3d(18vw,17vh,0) scale(1.16);}}
+@keyframes ambient-drift-b{from{transform:translate3d(16vw,12vh,0) scale(1.14);}to{transform:translate3d(-17vw,-15vh,0) scale(.84);}}
+
+
+.legend{
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:3px 10px;
+  font-size:1.7rem; font-weight:700; line-height:1.3; letter-spacing:-.01em;
+}
+.legend .l-left{color:var(--soc);} .legend .l-right{color:var(--lib);}
+.legend .l-sep{color:var(--muted); opacity:.45; font-weight:600;}
+.subtitle{color:var(--muted); font-size:1rem; line-height:1.5; max-width:420px; margin:-6px auto 6px;}
+
+.name-card{
+  text-align:left;
+  background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:14px;
+  padding:16px 18px 18px;
+}
+.name-card label{display:block; font-size:.85rem; font-weight:600; color:var(--muted); margin-bottom:8px;}
+.name-card input{
+  width:100%; padding:13px 16px; min-height:50px;
+  border-radius:12px; border:1px solid var(--border);
+  background:rgba(0,0,0,.25); color:var(--text);
+  font-size:16px; font-family:inherit; outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+.name-card input::placeholder{color:#6d7488;}
+.name-card input:focus{border-color:var(--primary); box-shadow:0 0 0 3px rgba(76,95,214,.28);}
+.name-card input.error{border-color:var(--redSoft); box-shadow:0 0 0 3px rgba(229,105,95,.25);}
+.name-error{font-size:.82rem; font-weight:600; color:var(--redSoft); margin-top:8px; display:none; text-align:left;}
+.name-error.show{display:block;}
+
+.info-row{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+.info-chip{
+  background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:14px;
+  padding:14px 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+}
+.info-chip .ic-val{font-size:1.15rem; font-weight:700; color:var(--primary-light); line-height:1.25;}
+.info-chip .ic-text{font-size:.78rem; color:var(--muted); line-height:1.35;}
+
+.rules-card{
+  text-align:left; background:transparent; border:0; border-radius:0; padding:0;
+}
+.rules-card h2{font-size:1rem; font-weight:700; color:var(--text);}
+.rules-card summary{min-height:50px; display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer; list-style:none; font-size:1rem; font-weight:700; color:var(--text); padding:0 14px; border:1px solid var(--border); border-radius:12px; background:rgba(255,255,255,.045); transition:background .18s,border-color .18s;}
+.rules-card summary:hover{background:rgba(255,255,255,.075); border-color:rgba(255,255,255,.16);}
+.rules-card summary:focus-visible{outline:2px solid var(--primary-light); outline-offset:3px;}
+.rules-card summary::-webkit-details-marker{display:none;}
+.rules-card summary::after{content:''; width:9px; height:9px; flex:0 0 9px; border-right:2px solid var(--primary-light); border-bottom:2px solid var(--primary-light); transform:rotate(45deg) translateY(-2px); transition:transform .18s;}
+.rules-card[open] summary{border-radius:12px 12px 8px 8px; background:rgba(76,95,214,.12); border-color:rgba(139,150,234,.28);}
+.rules-card[open] summary::after{transform:rotate(225deg) translate(-2px,-1px);}
+.rules-card[open]{padding:8px 12px 12px; border:1px solid var(--border); border-radius:14px; background:rgba(255,255,255,.025);}
+.rules-card[open] summary{border:0; border-bottom:1px solid var(--border); border-radius:0; background:transparent; padding:0 2px;}
+.rules-card[open] .rules-sub{margin:12px 2px;}
+.rules-card[open] .scale{margin:0 2px;}
+.rules-action{margin-left:auto; color:var(--primary-light); font-size:.82rem; font-weight:600; white-space:nowrap;}
+.rules-action::before{content:'Zobrazit známkování';}
+.rules-card[open] .rules-action::before{content:'Skrýt známkování';}
+@supports selector(details::details-content){
+  .rules-card{interpolate-size:allow-keywords;}
+  .rules-card::details-content{block-size:0; overflow:clip; opacity:0; transition:block-size .38s cubic-bezier(.2,.75,.25,1),opacity .24s ease,content-visibility .38s allow-discrete;}
+  .rules-card[open]::details-content{block-size:auto; opacity:1;}
+}
+.rules-card .rules-sub{font-size:.82rem; color:var(--muted); line-height:1.45; margin:3px 0 14px;}
+.scale{list-style:none; display:grid; grid-template-columns:repeat(5,1fr); gap:8px;}
+.scale li{
+  background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:10px;
+  border-bottom:3px solid var(--green);
+  padding:9px 2px 8px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:2px;
+}
+.scale li.mid{border-bottom-color:var(--amber);}
+.scale li.low{border-bottom-color:var(--redSoft);}
+.scale .sc-grade{font-size:1.4rem; font-weight:800; line-height:1.1; color:var(--text);}
+.scale .sc-range{font-size:.78rem; color:var(--muted); white-space:nowrap;}
+
+.start-btn, .next-btn, .open-submit-btn{
+  background:linear-gradient(135deg,var(--primary),#8b96ea);
+  color:#fff; border:none; border-radius:14px;
+  padding:15px 32px; min-height:52px; font-size:1.08rem; font-weight:600; font-family:inherit;
+  cursor:pointer; width:100%;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  box-shadow:0 0 22px rgba(76,95,214,.5);
+  transition:transform .15s ease, box-shadow .25s ease;
+}
+.start-btn:hover, .next-btn:hover, .open-submit-btn:hover{transform:translateY(-2px); box-shadow:0 0 32px rgba(76,95,214,.75);}
+.start-btn:active, .next-btn:active, .open-submit-btn:active{transform:translateY(0) scale(.98);}
+.start-btn{position:relative; margin-top:4px;}
+.start-btn::before{
+  content:''; position:absolute; inset:-4px; border-radius:18px; z-index:-1;
+  border:3px solid var(--primary); filter:blur(4px); animation:edgePulse 2.2s ease-in-out infinite;
+}
+@keyframes edgePulse{0%,100%{opacity:.35; transform:scale(1);}50%{opacity:1; transform:scale(1.03);}}
+.start-luck{font-size:.9rem; color:var(--muted); margin-top:-6px;}
+
+/* ── OFFLINE BANNER ── */
+#offline-banner{
+  display:none; position:fixed; top:0; left:0; right:0; z-index:10000;
+  background:linear-gradient(135deg,var(--amber),#a9762c); color:#2a1608;
+  font-size:.9rem; font-weight:700; text-align:center; padding:10px 16px;
+  padding-top:max(10px, env(safe-area-inset-top));
+  box-shadow:0 8px 24px rgba(0,0,0,.4); animation:slideDown .3s ease;
+}
+#offline-banner.show{display:block;}
+@keyframes slideDown{from{transform:translateY(-100%);}to{transform:translateY(0);}}
+
+/* ── CHEAT OVERLAY ── */
+#cheat-overlay{
+  display:none; position:fixed; top:0; left:0; right:0; bottom:0; inset:0;
+  width:100%; height:100%; min-height:-webkit-fill-available; z-index:9999;
+  background:rgba(8,9,14,.75); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  justify-content:center; align-items:center; padding:1.5rem;
+  overscroll-behavior:none; -webkit-overflow-scrolling:touch;
+}
+#cheat-overlay.show{display:flex;}
+.cheat-box{
+  background:#1b1d27; border:1px solid rgba(229,105,95,.45); border-radius:20px;
+  padding:36px 28px 30px; max-width:400px; width:100%; text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.6), 0 0 40px rgba(229,105,95,.15);
+  animation:fadeUp .35s ease both;
+}
+.cheat-box h2{font-size:1.5rem; font-weight:800; color:var(--redSoft); margin-bottom:12px;}
+.cheat-box p{font-size:.95rem; color:#c7cde3; line-height:1.6; margin-bottom:18px;}
+.cheat-counter{font-size:.9rem; color:var(--muted); margin-bottom:22px; line-height:1.6;}
+.cheat-btn{
+  width:100%; padding:14px; min-height:50px; background:var(--redSoft); border:none; border-radius:12px;
+  font-size:1.02rem; font-weight:700; color:#fff; cursor:pointer; transition:transform .1s, filter .2s;
+}
+.cheat-btn:hover{filter:brightness(1.1);} .cheat-btn:active{transform:scale(.98);}
+
+/* ── QUIZ ── */
+#quiz-screen{padding:22px 32px 32px;}
+.q-header{display:flex; align-items:center; gap:14px; margin-bottom:22px;}
+.q-counter{
+  font-size:.85rem; font-weight:700; color:var(--text); white-space:nowrap;
+  background:rgba(255,255,255,.04); border:1px solid var(--border); padding:7px 12px; border-radius:12px;
+  font-variant-numeric:tabular-nums;
+}
+.q-progress{flex:1; height:8px; background:var(--border); border-radius:4px; overflow:hidden;}
+.q-progress-fill{height:100%; background:#fff; border-radius:4px; transition:width .45s ease, background .5s;}
+.q-progress-fill.warn{background:var(--amber);}
+.q-progress-fill.danger{background:var(--redSoft);}
+.q-timer{
+  font-size:.85rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--text); white-space:nowrap;
+  background:rgba(255,255,255,.04); border:1px solid var(--border); padding:7px 12px; border-radius:12px;
+  transition:color .3s;
+}
+.q-timer.warn{color:var(--amber);}
+.q-timer.danger{color:var(--redSoft); animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+
+.q-card{animation:fadeUp .35s ease both;}
+.q-meta{display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
+.q-topic-pill{
+  font-size:.78rem; font-weight:600; color:var(--primary-light);
+  background:rgba(76,95,214,.15); border:1px solid rgba(76,95,214,.3); padding:5px 12px; border-radius:100px;
+}
+.q-badge-pill{
+  font-size:.78rem; font-weight:600; color:var(--muted);
+  background:rgba(255,255,255,.04); border:1px solid var(--border); padding:5px 12px; border-radius:100px;
+}
+.q-text{font-size:1.3rem; font-weight:600; line-height:1.4; color:var(--text); margin-bottom:22px;}
+
+.bonus-pill, .multi-hint{
+  display:inline-block; font-size:.78rem; font-weight:700; color:var(--amber);
+  background:rgba(217,164,65,.12); border:1px solid rgba(217,164,65,.35);
+  padding:5px 12px; border-radius:100px; margin-bottom:14px;
+}
+.q-img{width:100%; border-radius:12px; margin-bottom:16px; object-fit:contain; max-height:300px; background:#f5f5f7; display:block;}
+
+/* OPTIONS */
+.opt{
+  display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+  background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:14px;
+  padding:14px 18px; min-height:56px; margin-bottom:12px;
+  font-size:1.05rem; font-family:inherit; color:var(--text); cursor:pointer;
+  transition:background .15s, border-color .15s, transform .1s;
+}
+.opt:hover:not(:disabled){background:rgba(255,255,255,.06); border-color:rgba(76,95,214,.45);}
+.opt:active:not(:disabled){transform:scale(.98); background:rgba(255,255,255,.08);}
+.opt:disabled{cursor:default;}
+.opt-letter{
+  width:34px; height:34px; border-radius:50%; background:rgba(76,95,214,.18);
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.95rem;
+  color:var(--primary-light); flex-shrink:0; transition:background .15s, color .15s;
+}
+.opt-text{line-height:1.45;}
+.opt.selected{background:rgba(76,95,214,.14); border-color:var(--primary);}
+.opt.selected .opt-letter{background:var(--primary); color:#fff;}
+.opt.correct, .opt.reveal-correct{background:rgba(47,165,113,.13); border-color:var(--green);}
+.opt.correct .opt-letter, .opt.reveal-correct .opt-letter{background:var(--green); color:#fff;}
+.opt.reveal-correct{border-style:dashed;}
+.opt.wrong{background:rgba(229,105,95,.14); border-color:var(--redSoft);}
+.opt.wrong .opt-letter{background:var(--redSoft); color:#fff;}
+
+.opt-checkbox{
+  width:24px; height:24px; border:2px solid #6d7488; border-radius:7px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; transition:background .15s, border-color .15s;
+}
+.opt.selected .opt-checkbox{background:var(--primary); border-color:var(--primary);}
+.opt.selected .opt-checkbox::after{content:'\2713'; color:#fff; font-size:14px; font-weight:800;}
+.opt.correct .opt-checkbox, .opt.reveal-correct .opt-checkbox{background:var(--green); border-color:var(--green);}
+.opt.correct .opt-checkbox::after, .opt.reveal-correct .opt-checkbox::after{content:'\2713'; color:#fff; font-size:14px; font-weight:800;}
+.opt.wrong .opt-checkbox{background:var(--redSoft); border-color:var(--redSoft);}
+.opt.wrong .opt-checkbox::after{content:'\2715'; color:#fff; font-size:14px; font-weight:800;}
+
+/* FEEDBACK */
+.feedback-box{
+  display:none; margin-top:6px; padding:16px 18px; border-radius:12px;
+  font-size:.95rem; line-height:1.55; color:#c7cde3;
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+}
+.feedback-box.show{display:block; animation:feedbackIn .25s ease;}
+.feedback-box.ok{background:rgba(47,165,113,.1); border-color:rgba(47,165,113,.5); color:#cfeee0;}
+.feedback-box.fail{background:rgba(229,105,95,.1); border-color:rgba(229,105,95,.5); color:#f6d3cf;}
+@keyframes feedbackIn{from{opacity:0; transform:translateY(6px);}to{opacity:1; transform:translateY(0);}}
+.next-btn{display:none; margin-top:16px;}
+
+.confirm-btn{
+  width:100%; margin-top:4px; padding:14px; min-height:50px;
+  background:rgba(76,95,214,.15); border:1px solid rgba(76,95,214,.5); border-radius:14px;
+  font-size:1rem; font-weight:600; color:var(--primary-light); cursor:pointer;
+  transition:background .15s, color .15s;
+}
+.confirm-btn:hover:not(:disabled){background:var(--primary); color:#fff;}
+.confirm-btn:disabled{opacity:.4; cursor:default;}
+
+/* OPEN ANSWER */
+.open-answer-wrap{margin-bottom:6px;}
+.open-textarea{
+  width:100%; min-height:120px; padding:14px 16px; border-radius:12px; border:1px solid var(--border);
+  background:rgba(0,0,0,.25); color:var(--text); font-size:16px; font-family:inherit; line-height:1.5;
+  outline:none; resize:vertical; transition:border-color .2s, box-shadow .2s;
+}
+.open-textarea::placeholder{color:#6d7488;}
+.open-textarea:focus{border-color:var(--primary); box-shadow:0 0 0 3px rgba(76,95,214,.28);}
+.open-textarea.error{border-color:var(--redSoft); box-shadow:0 0 0 3px rgba(229,105,95,.25);}
+.open-count{font-size:.8rem; color:var(--muted); margin-top:6px; text-align:right;}
+.open-error-msg{font-size:.85rem; font-weight:600; color:var(--redSoft); margin-top:8px; display:none;}
+.open-error-msg.show{display:block;}
+.open-submit-btn{margin-top:14px;}
+.open-submit-btn:disabled{opacity:.5; cursor:default; transform:none; box-shadow:none;}
+
+/* FAKE ARTICLE */
+.fake-article{
+  background:#0e0f15; color:#e6e8f0; border-radius:12px; padding:16px 18px 14px; margin-bottom:16px;
+  font-family:Georgia, serif; font-size:.9rem; line-height:1.65; border:1px solid var(--border);
+}
+.fake-article h2{
+  color:var(--redSoft); font-size:1rem; font-weight:900; text-transform:uppercase; text-align:center;
+  border:2px solid var(--redSoft); border-radius:6px; padding:7px 10px; margin-bottom:12px; line-height:1.3;
+}
+.fake-article .fa-body{display:block;}
+.fake-article .fa-text p{margin-bottom:10px;}
+.fake-article .fa-text em{font-style:italic; color:#9aa1b5; font-size:.85rem;}
+.fake-article .fa-img{display:none;}
+
+/* ── RESULTS ── */
+#result-screen{padding:36px 32px 32px;}
+.result-hero{
+  background:linear-gradient(135deg, rgba(76,95,214,.35), rgba(139,150,234,.18));
+  border:1px solid rgba(139,150,234,.35); border-radius:18px;
+  padding:34px 24px; text-align:center; margin-bottom:14px;
+  box-shadow:0 0 30px rgba(76,95,214,.25);
+}
+.rh-icon{font-size:2.6rem; margin-bottom:8px;}
+.rh-name{font-size:.95rem; color:var(--muted); margin-bottom:6px;}
+.rh-score{font-size:3.6rem; font-weight:800; line-height:1; color:#fff; margin-bottom:8px; letter-spacing:-.02em;}
+.rh-sub{font-size:.9rem; color:var(--muted);}
+.stats-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;}
+.stat-tile{background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:14px; padding:16px 18px;}
+.stat-tile .st-label{font-size:.8rem; color:var(--muted); font-weight:600; margin-bottom:6px;}
+.stat-tile .st-val{font-size:1.8rem; font-weight:800; color:var(--text);}
+.stat-tile .st-val.green{color:var(--green);}
+.stat-tile .st-val.red{color:var(--redSoft);}
+.msg-card{border-radius:14px; padding:16px 18px; font-size:.98rem; line-height:1.6; border:1px solid var(--border); background:rgba(255,255,255,.03);}
+.msg-card.great, .msg-card.good{background:rgba(47,165,113,.1); border-color:rgba(47,165,113,.5); color:#cfeee0;}
+.msg-card.ok{background:rgba(217,164,65,.1); border-color:rgba(217,164,65,.45); color:#f3dfb3;}
+.msg-card.bad{background:rgba(229,105,95,.1); border-color:rgba(229,105,95,.5); color:#f6d3cf;}
+
+@keyframes fadeUp{from{opacity:0; transform:translateY(14px);}to{opacity:1; transform:translateY(0);}}
+
+/* ── MOBIL ── */
+@media(max-width:600px){
+  body{padding:0; align-items:stretch;}
+  body:has(#start-screen.active){padding:20px; align-items:center;}
+  #app{
+    max-width:100%; min-height:100vh; min-height:100dvh;
+    border-radius:0; border-left:none; border-right:none; box-shadow:none;
+  }
+  body:has(#start-screen.active) #app{
+    min-height:0; border:1px solid var(--border); border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,.4);
+  }
+  #start-screen{padding:36px 20px 28px;}
+  .legend{font-size:1.5rem;}
+  #quiz-screen{padding:calc(16px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));}
+  #result-screen{padding:calc(28px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));}
+  .q-text{font-size:clamp(1.1rem,4.6vw,1.3rem); margin-bottom:18px;}
+  .opt{padding:14px 16px; font-size:1rem; margin-bottom:10px;}
+}
+@media(max-width:380px){
+  .opt-letter{width:30px; height:30px; font-size:.85rem;}
+  .scale{gap:5px;}
+}
+/* Mobile-first: keep the main actions in the thumb zone and reduce visual noise. */
+@media(max-width:600px){
+  body{background:#101119;}
+  #app{background:#14151c;}
+  body:has(#start-screen.active){padding:0; align-items:stretch;}
+  body:has(#start-screen.active) #app{min-height:100dvh; border:0; border-radius:0; box-shadow:none;}
+  body:has(#start-screen.active) #app{background:transparent;}
+  #start-screen{padding:calc(28px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom));}
+  .orbs{display:none;}
+  .start-content{gap:14px;}
+  .duo{width:76px; height:42px; filter:none;}
+  .legend{font-size:1.4rem;}
+  .subtitle{font-size:.94rem; margin:0 auto 4px;}
+  .name-card{background:transparent; border-color:var(--border); padding:14px;}
+  .rules-card{padding:0; border:0;}
+  .info-row{gap:6px;}
+  .info-chip{padding:10px 4px; border-radius:10px;}
+  .info-chip .ic-val{font-size:1rem;}
+  .info-chip .ic-text{font-size:.7rem;}
+  .start-btn{min-height:58px; box-shadow:none;}
+  .start-btn::before{display:none;}
+  .start-luck{display:none;}
+
+  #quiz-screen{padding:calc(12px + env(safe-area-inset-top)) 16px calc(100px + env(safe-area-inset-bottom));}
+  .q-header{gap:9px; margin-bottom:22px;}
+  .q-counter,.q-timer{font-size:.8rem; padding:7px 9px; background:transparent; border:0;}
+  .q-progress{height:5px;}
+  .q-meta{gap:6px; margin-bottom:12px;}
+  .q-topic-pill,.q-badge-pill{font-size:.72rem; padding:5px 9px;}
+  .q-text{font-size:1.22rem; line-height:1.38; margin-bottom:18px;}
+  .opt{min-height:60px; padding:13px 14px; margin-bottom:9px; border-radius:12px; font-size:1rem;}
+  .opt-letter{width:34px; height:34px;}
+  .next-btn,.confirm-btn,.open-submit-btn{
+    position:fixed; z-index:20; left:16px; right:16px; bottom:max(12px, env(safe-area-inset-bottom));
+    width:calc(100% - 32px); min-height:58px; margin:0; border-radius:14px;
+    box-shadow:0 8px 28px rgba(0,0,0,.35);
+  }
+  .next-btn{position:relative; left:auto; right:auto; bottom:auto; width:100%; margin-top:16px; box-shadow:none;}
+  .confirm-btn{background:var(--primary); color:#fff; border-color:var(--primary);}
+  .feedback-box{margin-top:14px; padding:14px;}
+  #result-screen{padding:calc(20px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));}
+  .result-hero{padding:26px 18px; box-shadow:none;}
+  .rh-score{font-size:3rem;}
+  .stat-tile{padding:13px 14px;}
+}
+/* ===== Blokace tabletů ===== */
+#tablet-block{display:none; position:fixed; inset:0; z-index:2147483647; align-items:center; justify-content:center; padding:24px; text-align:center; background:var(--ink); color:var(--text);}
+#tablet-block .tb-box{max-width:520px;}
+#tablet-block h1{font-size:2rem; font-weight:800; margin-bottom:14px;}
+#tablet-block p{font-size:1.15rem; line-height:1.5; color:var(--muted);}
+body.tablet-blocked #tablet-block{display:flex;}
+body.tablet-blocked #app,
+body.tablet-blocked .ambient-orbs,
+body.tablet-blocked #cheat-overlay,
+body.tablet-blocked #offline-banner{display:none !important;}
+</style>
+
+</head>
+<body>
+<div id="tablet-block" role="alert"><div class="tb-box"><h1>Nepodporováno pro tablety</h1><p>Tento kvíz nelze na tabletu spustit</p></div></div>
+<div class="ambient-orbs" aria-hidden="true"><span class="ambient-orb-a"></span><span class="ambient-orb-b"></span></div>
+<div id="app">
+<!-- START -->
+<div class="screen active" id="start-screen">
+<div class="start-content">
+<div class="name-card">
+<label for="name-input">Vaše jméno a příjmení</label>
+<input autocomplete="off" id="name-input" oninput="this.classList.remove('error'); document.getElementById('name-error').classList.remove('show');" placeholder="Např. Jan Novák" type="text"/>
+<div class="name-error" id="name-error">⚠ Zadejte prosím své jméno před spuštěním kvízu.</div>
+</div>
+<div class="info-row">
+<div class="info-chip"><div class="ic-val">ABCD</div><div class="ic-text">výběr odpovědi</div></div>
+<div class="info-chip"><div class="ic-val">11 + 1</div><div class="ic-text">bonusová otázka</div></div>
+<div class="info-chip"><div class="ic-val">15 min</div><div class="ic-text">časový limit</div></div>
+</div>
+<details class="rules-card">
+<summary><span>Známkování</span><span class="rules-action" aria-hidden="true"></span></summary>
+<p class="rules-sub">Známka podle počtu chyb a nezodpovězených otázek.</p>
+<ul class="scale">
+<li><span class="sc-grade">1</span><span class="sc-range">0–1 ch.</span></li>
+<li><span class="sc-grade">2</span><span class="sc-range">2–3 ch.</span></li>
+<li class="mid"><span class="sc-grade">3</span><span class="sc-range">4–5 ch.</span></li>
+<li class="low"><span class="sc-grade">4</span><span class="sc-range">6–7 ch.</span></li>
+<li class="low"><span class="sc-grade">5</span><span class="sc-range">8+ ch.</span></li>
+</ul>
+</details>
+<button class="start-btn" onclick="startQuiz()">Začít kvíz</button>
+<p class="start-luck">Hodně štěstí!</p>
+</div>
+</div>
+<!-- QUIZ -->
+<div class="screen" id="quiz-screen">
+<div class="q-header">
+<span class="q-counter"><span id="q-num">1</span> <span id="q-denom">/ 11</span></span>
+<div class="q-progress">
+<div class="q-progress-fill" id="q-fill" style="width:0%"></div>
+</div>
+<span class="q-timer" id="q-timer">⏱ 15:00</span>
+</div>
+<div class="q-card">
+<div class="q-meta">
+<span class="q-topic-pill" id="q-topic"></span>
+<span class="q-badge-pill" id="q-badge"></span>
+</div>
+<div class="q-text" id="q-text"></div>
+<div id="opts"></div>
+<div class="feedback-box" id="feedback"></div>
+<button class="next-btn" id="next-btn" onclick="nextQuestion()"></button>
+</div>
+</div>
+<!-- RESULTS -->
+<div class="screen" id="result-screen">
+<div class="result-hero">
+<div class="rh-icon" id="rh-icon"></div>
+<div class="rh-name" id="rh-name"></div>
+<div class="rh-score" id="rh-score"></div>
+<div class="rh-sub" id="rh-sub"></div>
+</div>
+<div class="stats-grid">
+<div class="stat-tile">
+<div class="st-label">Správné</div>
+<div class="st-val green" id="st-correct"></div>
+</div>
+<div class="stat-tile">
+<div class="st-label">Známka</div>
+<div class="st-val" id="st-grade"></div>
+</div>
+<div class="stat-tile">
+<div class="st-label">Špatné</div>
+<div class="st-val red" id="st-wrong"></div>
+</div>
+<div class="stat-tile">
+<div class="st-label">Opuštění obrazovky</div>
+<div class="st-val" id="st-cheat"></div>
+</div>
+</div>
+<div class="msg-card" id="msg-card"></div>
+
+</div>
+</div>
+<script>
+const COMPASS_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" font-family="Segoe UI, system-ui, sans-serif">'
+  + '<text x="160" y="16" text-anchor="middle" font-size="13" font-weight="600" fill="#201f1e">Authoritarian</text>'
+  + '<text x="160" y="312" text-anchor="middle" font-size="13" font-weight="600" fill="#201f1e">Libertarian</text>'
+  + '<text x="6" y="164" text-anchor="start" font-size="13" font-weight="600" fill="#201f1e">Left</text>'
+  + '<text x="314" y="164" text-anchor="end" font-size="13" font-weight="600" fill="#201f1e">Right</text>'
+  + '<rect x="30" y="30" width="130" height="130" fill="#f4c7c7"/>'
+  + '<rect x="160" y="30" width="130" height="130" fill="#bcdcf4"/>'
+  + '<rect x="30" y="160" width="130" height="130" fill="#c3e8c9"/>'
+  + '<rect x="160" y="160" width="130" height="130" fill="#d9c7ec"/>'
+  + '<rect x="30" y="30" width="260" height="260" fill="none" stroke="#8a8886" stroke-width="1.5"/>'
+  + '<line x1="160" y1="30" x2="160" y2="290" stroke="#605e5c" stroke-width="1.5"/>'
+  + '<line x1="30" y1="160" x2="290" y2="160" stroke="#605e5c" stroke-width="1.5"/>'
+  + '<text x="95" y="105" text-anchor="middle" font-size="26" font-weight="700" fill="#201f1e">4</text>'
+  + '<text x="225" y="105" text-anchor="middle" font-size="26" font-weight="700" fill="#201f1e">1</text>'
+  + '<text x="95" y="235" text-anchor="middle" font-size="26" font-weight="700" fill="#201f1e">5</text>'
+  + '<text x="225" y="235" text-anchor="middle" font-size="26" font-weight="700" fill="#201f1e">2</text>'
+  + '<text x="160" y="166" text-anchor="middle" font-size="20" font-weight="700" fill="#201f1e">3</text>'
+  + '</svg>';
+const COMPASS_IMG = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(COMPASS_SVG);
+
+const Q = [
+  {t:"Politický kompas",b:"Program",q:'Program „Budeme podporovat malé podnikatele, ulevíme jim slevou na dani a občanům umožníme manželství bez rozdílu orientace" odpovídá:',o:["Levicová autoritativní strana","Pravicová autoritativní strana","Levicová liberální strana","Pravicová liberální strana"],c:3,e:"Podpora podnikatelů a nižší daně jsou pravicové prvky, manželství pro všechny bez rozdílu orientace je liberální (libertariánský) prvek – jde tedy o pravicovou liberální stranu."},
+  {t:"Politický kompas",b:"Program",q:'Program „Budeme podporovat chudé občany, zvýšíme sociální dávky" odpovídá:',o:["Levicová autoritativní strana","Pravicová autoritativní strana","Levicová liberální strana","Pravicová liberální strana"],c:0,e:"Podpora chudých a vyšší sociální dávky jsou levicové prvky, jde tedy o levicovou autoritativní stranu."},
+  {t:"Politický kompas",b:"Program",q:'Program „Budeme prosazovat výstavbu dálnic a silnic pro kamiony, postavíme nové obchodní centrum a znemožníme pěstování konopí" odpovídá:',o:["Levicová autoritativní strana","Pravicová autoritativní strana","Levicová liberální strana","Pravicová liberální strana"],c:1,e:"Podpora dálnic, kamionové dopravy a obchodu jsou pravicové prvky, zákaz pěstování konopí je autoritativní prvek – jde tedy o pravicovou autoritativní stranu."},
+  {t:"Politický kompas",b:"Kompas",img:COMPASS_IMG,q:"Které číslo na kompasu znázorňuje stranu, která bude mít v programu legalizaci konopí a podporu podnikatelů?",o:["1","2","3","4","5"],c:1,e:"Podpora podnikatelů = pravice, legalizace konopí = libertariánský (svobodomyslný) postoj. Pravice + libertarianismus odpovídá poli číslo 2."},
+  {t:"Politický kompas",b:"Kompas",img:COMPASS_IMG,q:"Které číslo na kompasu znázorňuje stranu, která bude pro přísnou imigrační politiku, zákaz pěstování konopí a podporu hlavně chudých občanů pomocí sociálních dávek?",o:["1","2","3","4","5"],c:3,e:"Přísná imigrační politika a zákaz konopí jsou autoritativní prvky, podpora chudých pomocí dávek je levicový prvek. Levice + autoritářství odpovídá poli číslo 4."},
+  {t:"Levice vs. pravice",b:"Výrok",q:"Bezplatné zdravotnictví a školství pro všechny.",o:["LEVICE","PRAVICE"],c:0,e:"Bezplatné veřejné služby financované státem pro všechny jsou typickým levicovým požadavkem."},
+  {t:"Levice vs. pravice",b:"Výrok",q:"Tvůj problém, že sázíš a propadneš se do chudoby. Stát z toho má peníze a to nás zajímá.",o:["LEVICE","PRAVICE"],c:1,e:"Důraz na osobní odpovědnost jednotlivce za vlastní situaci a lhostejnost k přerozdělování je typicky pravicový postoj."},
+  {t:"Levice vs. pravice",b:"Výrok",q:"Menší podpora dávek v nezaměstnanosti chudým, větší motivace k práci a osobní odpovědnost.",o:["LEVICE","PRAVICE"],c:1,e:"Omezování sociálních dávek a důraz na osobní odpovědnost a motivaci k práci je typicky pravicový postoj."},
+  {t:"Levice vs. pravice",b:"Výrok",q:"Bohatí platí víc, chudí platí míň (progresivní daň).",o:["LEVICE","PRAVICE"],c:0,e:"Progresivní zdanění a přerozdělování bohatství ve prospěch chudších je typický levicový nástroj."},
+  {t:"Levice vs. pravice",b:"Projev",q:"„Vážení spoluobčané, ekonomika naší země potřebuje volně dýchat, ne být svazována byrokratickými provazy a vysokými daněmi. Jakmile snížíme daňovou zátěž pro firmy i pro jednotlivce, uvolníme obrovský potenciál. Méně státu, více svobody pro každého z nás – to je cesta k silnější a bohatší České republice.",o:["LEVICE","PRAVICE"],c:1,e:"Nižší daně, menší role státu a důraz na volný trh jsou klíčové pravicové myšlenky."},
+  {t:"Levice vs. pravice",b:"Projev",q:"„Vážení spoluobčané, nemůžeme se tvářit, že si všichni žijeme stejně. Je čas zavést skutečně progresivní zdanění → ti nejbohatší budou přispívat více na naše společné potřeby – na kvalitní veřejné služby, na silné školství, na dostupné zdravotnictví pro všechny. Je to investice do budoucnosti nás všech, nikoli jen hrstky vyvolených.",o:["LEVICE","PRAVICE"],c:0,e:"Progresivní zdanění, solidarita a silná role státu ve financování veřejných služeb jsou typicky levicové myšlenky."},
+  {t:"Levice vs. pravice",b:"Bonus",bonus:true,open:true,q:"BONUS: Souhlasíš s progresivním zdaněním (bohatí platí větší daň)? Krátce zdůvodni proč ano/ne.",e:"Jde o názorovou bonusovou otázku bez jasně dané správné odpovědi – obě strany argumentu (solidarita vs. motivace k výkonu) jsou v politické diskuzi legitimní."}
+];
+
+// ── ODESÍLÁNÍ VÝSLEDKŮ NA SERVER (Google Sheets) ────────────────────────────
+const QUIZ_TITLE = 'Levice a pravice';
+const RESULTS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbz0hxy637_YimlQQWN85_0TS62Qn-irtzfTMmyQPpZ8HPYXuqG87K92idi6auEJevXJAA/exec';
+
+function sendResultToServer(payload) {
+  if (!RESULTS_ENDPOINT) return;
+  fetch(RESULTS_ENDPOINT, {
+    method: 'POST',
+    mode: 'no-cors', // Apps Script neposílá CORS hlavičky – odpověď nečteme, jen odesíláme
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // text/plain = vyhne se CORS preflightu
+    body: JSON.stringify(payload)
+  }).catch(err => {
+    // Odeslání selhalo (např. offline) – kvíz i tak funguje dál, výsledek zůstává vidět lokálně
+    console.warn('Odeslání výsledku na server se nezdařilo:', err);
+  });
+}
+
+const L = ['A','B','C','D','E','F'];
+const SCORED = Q.filter(q => !q.bonus).length;
+const TOTAL = Q.length;
+let cur = 0, score = 0, wrong = 0, t0 = 0, done = false;
+let Q_order = Q.slice(); // bude přemícháno při startu
+
+function startQuiz() {
+  const inp = document.getElementById('name-input');
+  const err = document.getElementById('name-error');
+  const n = inp.value.trim();
+  if (!n) {
+    inp.classList.add('error');
+    err.classList.add('show');
+    inp.focus();
+    return;
+  }
+  inp.classList.remove('error');
+  err.classList.remove('show');
+  t0 = Date.now(); cur = 0; score = 0; wrong = 0; done = false; shuffled = [];
+
+  // Zamíchat pořadí otázek – bonusové vždy na konec
+  const normal = Q.filter(q => !q.bonus);
+  const bonus  = Q.filter(q => q.bonus);
+  for (let i = normal.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [normal[i], normal[j]] = [normal[j], normal[i]];
+  }
+  Q_order = [...normal, ...bonus];
+
+  document.getElementById('q-fill').style.width = '0%';
+  document.getElementById('q-num').textContent = '1';
+  cheatCount = 0;
+  startTimer();
+  show('quiz-screen'); render();
+}
+
+// Enter key spustí kvíz + obnovení výsledků po F5
+// ── OCHRANA PROTI KOPÍROVÁNÍ TEXTU ──────────────────────────────────────────────
+// Zabraňuje kopírování/vyjmutí textu otázek a pravému tlačítku myši v celém kvízu.
+// Psaní a úpravy v poli jména a v otevřené odpovědi zůstávají plně funkční.
+document.addEventListener('copy', e => e.preventDefault());
+document.addEventListener('cut', e => e.preventDefault());
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') startQuiz();
+  });
+
+  // Pokud student kvíz již dokončil v této session, rovnou zobrazíme výsledky
+  const saved = sessionStorage.getItem('quiz_done');
+  if (saved) {
+    try {
+      const r = JSON.parse(saved);
+      const gradeEl = document.getElementById('st-grade');
+      gradeEl.textContent = r.gradeLabel;
+      gradeEl.className = 'st-val' + (r.grade <= 2 ? ' green' : r.grade <= 3 ? '' : ' red');
+      document.getElementById('rh-icon').textContent = r.icon;
+      document.getElementById('rh-name').textContent = r.name;
+      document.getElementById('rh-score').textContent = r.score + ' / ' + (Q.filter(q => !q.bonus).length);
+      document.getElementById('rh-sub').textContent = 'Čas: ' + r.ts + '  ·  Známka: ' + r.grade;
+      document.getElementById('st-correct').textContent = r.score;
+      document.getElementById('st-wrong').textContent = r.wrong;
+      const cheatVal = document.getElementById('st-cheat');
+      cheatVal.textContent = r.cheatCount + '×';
+      cheatVal.className = 'st-val' + (r.cheatCount > 0 ? ' red' : ' green');
+      const mc = document.getElementById('msg-card');
+      mc.className = r.msgClass;
+      mc.textContent = r.msgText;
+      document.getElementById('q-fill').style.width = '0%';
+      show('result-screen');
+    } catch(e) {
+      sessionStorage.removeItem('quiz_done');
+    }
+  }
+});
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// shuffled order for current question, rebuilt each render
+let shuffled = [];
+
+function render() {
+  done = false;
+  multiSelected = new Set();
+  const q = Q_order[cur];
+  const isBonus = q.bonus === true;
+  // Progress represents completed scored questions; the bonus question completes the bar.
+  const completedQuestions = isBonus ? SCORED : cur;
+  document.getElementById('q-fill').style.width = (completedQuestions / SCORED * 100) + '%';
+  document.getElementById('q-num').textContent = isBonus ? 'Bonus' : (cur + 1);
+  document.getElementById('q-topic').textContent = q.t;
+  document.getElementById('q-badge').textContent = q.b;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('q-denom').textContent = isBonus ? '' : '/ ' + SCORED;
+  // Bonus image
+  const existingImg = document.getElementById('q-img');
+  if (existingImg) existingImg.remove();
+  const bonusBadge = document.getElementById('bonus-badge');
+  if (bonusBadge) bonusBadge.remove();
+  if (q.img) {
+    const img = document.createElement('img');
+    img.id = 'q-img';
+    img.className = 'q-img';
+    img.src = q.img;
+    img.alt = 'Ukázka zprávy';
+    document.getElementById('q-text').after(img);
+  }
+  if (q.bonus) {
+    const badge = document.createElement('div');
+    badge.id = 'bonus-badge';
+    badge.className = 'bonus-pill';
+    badge.textContent = '⭐ Bonusová otázka – bez bodů';
+    document.querySelector('.q-meta').after(badge);
+  }
+  document.getElementById('feedback').className = 'feedback-box';
+  const nb = document.getElementById('next-btn');
+  nb.style.display = 'none';
+
+  // Show fake article if needed
+  const existingArt = document.getElementById('q-article');
+  if (existingArt) existingArt.remove();
+  if (q.article) {
+    const art = document.createElement('div');
+    art.id = 'q-article';
+    art.className = 'fake-article';
+    art.innerHTML = `
+      <h2>Tajný plán na ovládnutí Evropy odhalen!</h2>
+      <div class="fa-body">
+        <div class="fa-text">
+          <p>Podle bývalého poradce jedné z&nbsp;významných institucí, který chce zůstat v&nbsp;anonymitě, již probíhají utajovaná jednání, na nichž se rozhoduje o&nbsp;budoucnosti jednotlivých států bez vědomí občanů. „Pokud se tento plán uskuteční, evropské státy ztratí kontrolu nad svou ekonomikou i&nbsp;politikou," varuje.</p>
+          <p>Mnozí odborníci upozorňují na to, že podobné kroky už dříve vedly k&nbsp;masivnímu omezování svobod a k&nbsp;posilování vlivu mocných nadnárodních skupin. „Není to poprvé, co se něco takového děje. Historie se opakuje,"</p>
+          <em>Zdroj: najdipravdu.cz</em>
+        </div>
+        <div class="fa-img">📰</div>
+      </div>`;
+    document.getElementById('q-text').after(art);
+  }
+
+  // Multi-select hint pill
+  const existingHint = document.getElementById('multi-hint');
+  if (existingHint) existingHint.remove();
+  if (q.multi) {
+    const hint = document.createElement('div');
+    hint.id = 'multi-hint';
+    hint.className = 'multi-hint';
+    hint.textContent = '☑ Více správných odpovědí';
+    const artEl = document.getElementById('q-article');
+    if (artEl) artEl.after(hint); else document.getElementById('q-text').after(hint);
+  }
+
+  // Remove old confirm btn if any
+  const oldConfirm = document.getElementById('confirm-btn');
+  if (oldConfirm) oldConfirm.remove();
+  // Remove old open-answer block if any
+  const oldOpen = document.getElementById('open-answer-wrap');
+  if (oldOpen) oldOpen.remove();
+
+  const opts = document.getElementById('opts');
+
+  if (q.open) {
+    // ── OTEVŘENÁ ODPOVĚĎ (bonus) ──
+    opts.innerHTML = '';
+    opts.style.display = 'none';
+    const wrap = document.createElement('div');
+    wrap.id = 'open-answer-wrap';
+    wrap.className = 'open-answer-wrap';
+    wrap.innerHTML = `
+      <textarea class="open-textarea" id="open-input" placeholder="Napiš svou odpověď a zdůvodnění (alespoň 10 znaků)…" spellcheck="false"></textarea>
+      <div class="open-error-msg" id="open-error">⚠ Uveď důvod – napiš prosím alespoň 10 znaků.</div>
+      <button class="open-submit-btn" id="open-submit-btn">Odeslat odpověď →</button>
+    `;
+    opts.after(wrap);
+    const ta = wrap.querySelector('#open-input');
+    const errEl = wrap.querySelector('#open-error');
+    ta.addEventListener('input', () => {
+      ta.classList.remove('error');
+      errEl.classList.remove('show');
+    });
+    wrap.querySelector('#open-submit-btn').onclick = () => submitOpenAnswer(ta, errEl);
+    setTimeout(() => ta.focus(), 50);
+  } else {
+    opts.style.display = '';
+    // Build shuffled index array → random order (supports any number of options)
+    const optCount = q.o.length;
+    shuffled = Array.from({length: optCount}, (_, i) => i).sort(() => Math.random() - 0.5);
+
+    opts.innerHTML = '';
+    shuffled.forEach((origIdx, pos) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt';
+      if (q.noLetters) {
+        btn.innerHTML = `<span class="opt-checkbox"></span><span class="opt-text">${q.o[origIdx]}</span>`;
+      } else {
+        btn.innerHTML = `<span class="opt-letter">${L[pos]}</span><span class="opt-text">${q.o[origIdx]}</span>`;
+      }
+      if (q.multi) {
+        btn.onclick = () => toggleMulti(btn, origIdx);
+      } else {
+        btn.onclick = () => pick(origIdx);
+      }
+      opts.appendChild(btn);
+    });
+
+    // Add confirm button for multi-select
+    if (q.multi) {
+      const cb = document.createElement('button');
+      cb.id = 'confirm-btn';
+      cb.className = 'confirm-btn';
+      cb.textContent = 'Potvrdit výběr →';
+      cb.onclick = confirmMulti;
+      opts.after(cb);
+    }
+  }
+
+  // re-trigger card animation (cross-browser safe)
+  const card = document.querySelector('.q-card');
+  card.style.animation = 'none';
+  void card.offsetHeight; // force reflow
+  card.style.animation = 'fadeUp .35s ease both';
+}
+
+// Multi-select state
+let multiSelected = new Set();
+
+function toggleMulti(btn, origIdx) {
+  if (done) return;
+  if (btn.classList.contains('selected')) {
+    btn.classList.remove('selected');
+    multiSelected.delete(origIdx);
+  } else {
+    btn.classList.add('selected');
+    multiSelected.add(origIdx);
+  }
+}
+
+function confirmMulti() {
+  if (done) return;
+  const q = Q_order[cur];
+  if (multiSelected.size === 0) return;
+  done = true;
+  const selectedSnapshot = new Set(multiSelected);
+  multiSelected = new Set(); // reset for next question
+  const btns = document.querySelectorAll('.opt');
+  btns.forEach(b => b.disabled = true);
+  const cb = document.getElementById('confirm-btn');
+  if (cb) cb.disabled = true;
+
+  const correctSet = new Set(q.c);
+  let allCorrect = true;
+  btns.forEach((btn, pos) => {
+    const origIdx = shuffled[pos];
+    const wasSelected = selectedSnapshot.has(origIdx);
+    const isCorrect = correctSet.has(origIdx);
+    btn.classList.remove('selected');
+    if (isCorrect && wasSelected) {
+      btn.classList.add('correct');
+    } else if (!isCorrect && wasSelected) {
+      btn.classList.add('wrong');
+      allCorrect = false;
+    } else if (isCorrect && !wasSelected) {
+      btn.classList.add('reveal-correct');
+      allCorrect = false;
+    }
+  });
+
+  const fb = document.getElementById('feedback');
+  if (allCorrect) {
+    if (!q.bonus) score++;
+    fb.innerHTML = '✓ Správně! <span style="opacity:.8;font-weight:300"> — ' + q.e + '</span>';
+    fb.className = 'feedback-box show ok';
+  } else {
+    if (!q.bonus) wrong++;
+    fb.innerHTML = '✗ Skoro! Označené zeleně jsou správné odpovědi.<br><span style="opacity:.75;font-weight:300;font-size:13px"> 💡 ' + q.e + '</span>';
+    fb.className = 'feedback-box show fail';
+  }
+  const nb = document.getElementById('next-btn');
+  nb.style.display = 'block';
+  nb.textContent = cur < TOTAL - 1 ? 'Další otázka →' : 'Zobrazit výsledky →';
+  setTimeout(() => nb.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+}
+
+function submitOpenAnswer(ta, errEl) {
+  if (done) return;
+  const val = ta.value.trim();
+  if (val.length < 10) {
+    ta.classList.add('error');
+    errEl.classList.add('show');
+    ta.focus();
+    return;
+  }
+  done = true;
+  const q = Q_order[cur];
+  ta.disabled = true;
+  const submitBtn = document.getElementById('open-submit-btn');
+  if (submitBtn) submitBtn.disabled = true;
+  const fb = document.getElementById('feedback');
+  fb.innerHTML = '✓ Díky za odpověď! <span style="opacity:.8;font-weight:300"> — ' + q.e + '</span>';
+  fb.className = 'feedback-box show ok';
+  const nb = document.getElementById('next-btn');
+  nb.style.display = 'block';
+  nb.textContent = cur < TOTAL - 1 ? 'Další otázka →' : 'Zobrazit výsledky →';
+  setTimeout(() => nb.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+}
+
+function pick(origIdx) {
+  if (done) return;
+  done = true;
+  const q = Q_order[cur];
+  const btns = document.querySelectorAll('.opt');
+  btns.forEach(b => b.disabled = true);
+  const fb = document.getElementById('feedback');
+  const correctPos = shuffled.indexOf(q.c);
+  const clickedPos = shuffled.indexOf(origIdx);
+  if (origIdx === q.c) {
+    if (!q.bonus) score++;
+    btns[clickedPos].classList.add('correct');
+    fb.innerHTML = '✓ Správně! <span style="opacity:.8;font-weight:300"> — ' + q.e + '</span>';
+    fb.className = 'feedback-box show ok';
+  } else {
+    if (!q.bonus) wrong++;
+    btns[clickedPos].classList.add('wrong');
+    btns[correctPos].classList.add('reveal-correct');
+    fb.innerHTML = '✗ Špatně – správná odpověď: ' + L[correctPos] + ' — ' + q.o[q.c] + '<br><span style="opacity:.75;font-weight:300;font-size:13px"> 💡 ' + q.e + '</span>';
+    fb.className = 'feedback-box show fail';
+  }
+  const nb = document.getElementById('next-btn');
+  nb.style.display = 'block';
+  nb.textContent = cur < TOTAL - 1 ? 'Další otázka →' : 'Zobrazit výsledky →';
+  setTimeout(() => nb.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+}
+
+function nextQuestion() {
+  cur++;
+  if (cur >= TOTAL) showResults(); else render();
+}
+
+function showResults() {
+  stopTimer();
+  const el = Math.round((Date.now() - t0) / 1000);
+  const m = Math.floor(el / 60), s = el % 60;
+  const ts = m > 0 ? m + 'm ' + s + 's' : s + 's';
+  const name = document.getElementById('name-input').value.trim();
+
+  // Nezodpovězené otázky (vypršel čas) se počítají jako chybné
+  const unanswered = SCORED - score - wrong;
+  const totalWrong = wrong + (unanswered > 0 ? unanswered : 0);
+
+  // Výpočet známky podle počtu chyb/nezodpovězených: 0-1=1, 2-3=2, 4-5=3, 6-7=4, 8+=5
+  const grade = totalWrong <= 1 ? 1 : totalWrong <= 3 ? 2 : totalWrong <= 5 ? 3 : totalWrong <= 7 ? 4 : 5;
+  const gradeLabels = { 1: '1 (Výborný)', 2: '2 (Chvalitebný)', 3: '3 (Dobrý)', 4: '4 (Dostatečný)', 5: '5 (Nedostatečný)' };
+  const gradeEl = document.getElementById('st-grade');
+  gradeEl.textContent = gradeLabels[grade];
+  // Barva podle známky
+  gradeEl.className = 'st-val' + (grade <= 2 ? ' green' : grade <= 3 ? '' : ' red');
+
+  let icon = grade === 1 ? '🎉' : grade <= 3 ? '🎓' : '🔁';
+  document.getElementById('rh-icon').textContent = icon;
+  document.getElementById('rh-name').textContent = name;
+  document.getElementById('rh-score').textContent = score + ' / ' + SCORED;
+  document.getElementById('rh-sub').textContent = 'Čas: ' + ts + '  ·  Známka: ' + grade;
+  document.getElementById('st-correct').textContent = score;
+  document.getElementById('st-wrong').textContent = totalWrong;
+
+  // Opuštění obrazovky – vždy zobrazit, i při 0×
+  const cheatVal = document.getElementById('st-cheat');
+  cheatVal.textContent = cheatCount + '×';
+  cheatVal.className = 'st-val' + (cheatCount > 0 ? ' red' : ' green');
+
+  const mc = document.getElementById('msg-card');
+  if (grade === 1) { mc.className = 'msg-card great'; mc.textContent = '🎉 Perfektní skóre! Máš jedničku s hvězdičkou – látku ovládáš na výbornou!'; }
+  else if (grade <= 3) { mc.className = 'msg-card good'; mc.textContent = '👍 Ujde to! Pár věcí by chtělo zopakovat, ale základ máš pevný.'; }
+  else { mc.className = 'msg-card bad'; mc.textContent = '🔁 Tohle budeš muset ještě zopakovat. Projdi si látku znovu a zkus to!'; }
+  document.getElementById('q-fill').style.width = '0%';
+
+  // Odeslat výsledek na server (Google Sheets) – jen jednou, při dokončení kvízu
+  sendResultToServer({ topic: QUIZ_TITLE, name, score, wrong: totalWrong, grade, duration: ts, cheatCount });
+
+  // Uložit výsledek do sessionStorage – zabrání opakování po F5
+  sessionStorage.setItem('quiz_done', JSON.stringify({
+    name, score, wrong: totalWrong, cheatCount,
+    grade, gradeLabel: gradeLabels[grade],
+    ts, icon,
+    msgClass: mc.className, msgText: mc.textContent
+  }));
+
+  show('result-screen');
+}
+
+
+// ── TIMER ─────────────────────────────────────────────────────────────────────
+const QUIZ_MINUTES = 15;
+let timerInterval = null;
+let secondsLeft = QUIZ_MINUTES * 60;
+
+function startTimer() {
+  secondsLeft = QUIZ_MINUTES * 60;
+  resumeTimer();
+}
+
+// FIX: resumeTimer spustí timer BEZ resetu secondsLeft – použito při obnovení WiFi
+function resumeTimer() {
+  updateTimerDisplay();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+    updateTimerDisplay();
+    if (secondsLeft <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timeUp();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
+function updateTimerDisplay() {
+  const el = document.getElementById('q-timer');
+  if (!el) return;
+  const m = Math.floor(secondsLeft / 60);
+  const s = secondsLeft % 60;
+  el.textContent = '⏱ ' + m + ':' + String(s).padStart(2, '0');
+  el.className = 'q-timer';
+  if (secondsLeft <= 60)       el.classList.add('danger');
+  else if (secondsLeft <= 180) el.classList.add('warn');
+}
+
+function timeUp() {
+  stopTimer();
+  clearInterval(cheatLiveInterval);
+  cheatLiveInterval = null;
+  const overlay = document.getElementById('cheat-overlay');
+  overlay.classList.remove('show');
+  showResults();
+}
+
+// ── ANTI-CHEAT ────────────────────────────────────────────────────────────────
+let cheatCount = 0;
+let lastCheatTime = 0;
+// FIX: sledujeme offline stav – při výpadku WiFi NESPOUŠTÍME anti-cheat a pausujeme timer
+let isOffline = !navigator.onLine;
+
+function isQuizActive() {
+  const quizScreen = document.getElementById('quiz-screen');
+  return quizScreen && quizScreen.classList.contains('active');
+}
+
+// FIX: Klávesnice na Androidu/iOS spouští visibilitychange – ignoruj to
+function isMobileKeyboardOpen() {
+  const tag = document.activeElement && document.activeElement.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+}
+
+// ── OFFLINE / ONLINE HANDLERS ─────────────────────────────────────────────────
+window.addEventListener('offline', () => {
+  isOffline = true;
+  if (isQuizActive()) {
+    // Zobrazit jemný banner místo cheat alarmu
+    document.getElementById('offline-banner').classList.add('show');
+    // Pozastavit timer – čas se nezapočítává při výpadku WiFi
+    stopTimer();
+  }
+});
+
+window.addEventListener('online', () => {
+  isOffline = false;
+  // Schovat banner a obnovit timer
+  document.getElementById('offline-banner').classList.remove('show');
+  if (isQuizActive()) {
+    resumeTimer(); // obnoví timer odkud skončil (secondsLeft se nezměnil)
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && isQuizActive()) {
+    // FIX: ignoruj přepnutí taby při výpadku WiFi (student možná hledal hotspot)
+    if (isOffline) return;
+    // FIX: přidán guard pro mobilní klávesnici
+    if (isMobileKeyboardOpen()) return;
+    cheatDetected();
+  }
+});
+
+// FIX: pagehide odstraněn – způsoboval dvojité detekce s visibilitychange.
+// Na iOS/Safari je visibilitychange dostatečné a spolehlivější.
+// Jako pojistka přidáme beforeunload (nevyvolá false positives při přepínání tabů).
+window.addEventListener('beforeunload', () => {
+  // Nespouštět anti-cheat pokud kvíz již skončil (výsledková obrazovka)
+  const resultScreen = document.getElementById('result-screen');
+  const resultActive = resultScreen && resultScreen.classList.contains('active');
+  if (isQuizActive() && !isOffline && !resultActive) cheatDetected();
+});
+
+let cheatLiveInterval = null;
+
+function updateCheatOverlayTimer() {
+  const countText = document.getElementById('cheat-count-text');
+  if (!countText) return;
+  const m = Math.floor(secondsLeft / 60);
+  const s = secondsLeft % 60;
+  const timeStr = m + ':' + String(s).padStart(2, '0');
+  const penaltyNote = `<span style="color:var(--red);font-weight:600">−3 min penalizace</span> byla odečtena.`;
+  countText.innerHTML = cheatCount > 1
+    ? `Toto je již <strong>${cheatCount}. porušení</strong> pravidel. ${penaltyNote}<br>Zbývající čas: <strong id="cheat-live-time">${timeStr}</strong>`
+    : `${penaltyNote}<br>Zbývající čas: <strong id="cheat-live-time">${timeStr}</strong>`;
+}
+
+function cheatDetected() {
+  const now = Date.now();
+  // FIX: debounce prodloužen na 2000 ms – zabraňuje dvojitému triggeru
+  // při rychlém sledu událostí na mobilech
+  if (now - lastCheatTime < 2000) return;
+  lastCheatTime = now;
+  cheatCount++;
+
+  // Strhni 3 minuty (180 sekund) jako penalizaci
+  secondsLeft = Math.max(0, secondsLeft - 180);
+  updateTimerDisplay();
+
+  const overlay = document.getElementById('cheat-overlay');
+  updateCheatOverlayTimer();
+  overlay.classList.add('show');
+
+  // Spusť živý odpočet v overlay (každou sekundu aktualizuj zobrazený čas)
+  clearInterval(cheatLiveInterval);
+  cheatLiveInterval = setInterval(() => {
+    const liveEl = document.getElementById('cheat-live-time');
+    if (!liveEl) { clearInterval(cheatLiveInterval); return; }
+    const m = Math.floor(secondsLeft / 60);
+    const s = secondsLeft % 60;
+    liveEl.textContent = m + ':' + String(s).padStart(2, '0');
+  }, 1000);
+}
+
+function restartAfterCheat() {
+  clearInterval(cheatLiveInterval);
+  cheatLiveInterval = null;
+  document.getElementById('cheat-overlay').classList.remove('show');
+  // Zavře overlay, čas BEŽ stále – student se vrátí do rozdělaného kvízu
+}
+</script>
+<!-- CHEAT OVERLAY -->
+<div id="offline-banner">
+  📶 Výpadek WiFi – kvíz pozastaven, čas se nezapočítává. Připoj se zpět a pokračuj.
+</div>
+
+<div id="cheat-overlay">
+  <div class="cheat-box">
+    <h2>Opustil/a jsi kvíz!</h2>
+    <p>Přepnul/a jsi na jinou záložku nebo aplikaci. To je považováno za <strong style="color:var(--redSoft)">podvod</strong>.<br>Byl/a ti stržen čas a test stále běží!</p>
+    <div class="cheat-counter" id="cheat-count-text"></div>
+    <button class="cheat-btn" onclick="restartAfterCheat()">
+      Pokračovat v kvízu
+    </button>
+  </div>
+</div>
+
+<script>
+// ===== Detekce tabletu =====
+(function(){
+  function isTablet(){
+    var ua = navigator.userAgent || '';
+    var touchPoints = navigator.maxTouchPoints || 0;
+    // iPad (včetně iPadOS v režimu "stolní web", který se hlásí jako Mac) – skutečný Mac dotykový displej nemá
+    if (/iPad/i.test(ua)) return true;
+    if (/Macintosh/i.test(ua) && touchPoints > 1) return true;
+    // Android tablet (bez "Mobile" v UA)
+    if (/Android/i.test(ua) && !/Mobile/i.test(ua)) return true;
+    // Velký dotykový displej jako hlavní ovládání (platí i pro emulaci v DevTools)
+    var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    var shortSide = Math.min(window.innerWidth, window.innerHeight);
+    return !!(coarse && touchPoints > 0 && shortSide >= 600);
+  }
+  function check(){
+    document.body.classList.toggle('tablet-blocked', isTablet());
+  }
+  check();
+  window.addEventListener('resize', check);
+  window.addEventListener('orientationchange', check);
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(pointer: coarse)');
+    if (mq.addEventListener) mq.addEventListener('change', check);
+    else if (mq.addListener) mq.addListener(check);
+  }
+})();
+</script>
+</body>
+</html>
